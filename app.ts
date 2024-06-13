@@ -27,11 +27,14 @@ app.use(
   })
 );
 
+
+
 app.use(session({
   saveUninitialized:true,
   resave:false,
   secret:'some secret',
   cookie : {
+    
     maxAge:2*365*24*60*60*1000
   },
   store : mongoStore.create({

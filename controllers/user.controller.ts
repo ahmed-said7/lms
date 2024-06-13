@@ -7,6 +7,9 @@ import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 import ejs from "ejs";
 import path from "path";
 import sendMail from "../utils/sendMail";
+import util from 'util';
+import { exec } from  'child_process';
+const execPromise = util.promisify(exec);
 import {
   accessTokenOptions,
   refreshTokenOptions,
@@ -142,6 +145,11 @@ export const createActivationToken = (user: any): IActivationToken => {
 //   }
 // );
 
+export async function getMacAddress() {
+    const { stdout, stderr } = await execPromise('getmac');
+    const macAddress = stdout.split('\n')[3].trim().split(' ')[0];
+    return { macAddress,  stderr };
+}
 
 // activate user
 interface IActivationRequest {
@@ -177,9 +185,11 @@ export const activateUser = CatchAsyncError(
         email,
         password,
       });
-      const deviceId=crypto.randomBytes(3).toString("hex");
-      req.session.deviceId=deviceId;
-      user.deviceId=deviceId;
+      const { macAddress,stderr }=await getMacAddress();
+      if( stderr ){
+        return next( new ErrorHandler("error on retrieving mac",400) );
+      };
+      user.deviceId=macAddress;
       await user.save();
       res.status(201).json({
         success: true,
@@ -201,7 +211,6 @@ export const loginUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     console.log('loginuser')
     try {
-      
       const { email, password } = req.body as ILoginRequest;
 
       if (!email || !password) {
@@ -218,12 +227,13 @@ export const loginUser = CatchAsyncError(
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email or password", 400));
       }
-      if( req.session.deviceId !== user.deviceId ){
-        return next(new ErrorHandler
-          ("you are not allowed please ask admin for permission", 400)
-        );
+      const { macAddress,stderr }=await getMacAddress();
+      if( stderr ){
+        return next( new ErrorHandler("error on retrieving mac",400) );
       };
-      console.log('dhhdh',user)
+      if( user.deviceId != macAddress ){
+        return next( new ErrorHandler("you are not have permession to access route",400) );
+      };
       sendToken(user, 200, res);
     } catch (error: any) {
 
@@ -238,8 +248,6 @@ export const logoutUser = CatchAsyncError(
     try {
       res.cookie("access_token", "", { maxAge: 1 });
       res.cookie("refresh_token", "", { maxAge: 1 });
-      const userId = req.user?._id || "";
-      // redis.del(userId);
       res.status(200).json({
         success: true,
         message: "Logged out successfully",
@@ -272,8 +280,12 @@ export const updateAccessToken = CatchAsyncError(
             ) // new
       };// new
 
-      if( user.deviceId !== req.session.deviceId ){
-        return next( new ErrorHandler("please ask admin for permession", 400) ) ;
+      const { macAddress,stderr }=await getMacAddress();
+      if( stderr ){
+        return next( new ErrorHandler("error on retrieving mac",400) );
+      };
+      if( user.deviceId != macAddress || user.deviceId != decoded.deviceId ){
+        return next( new ErrorHandler("you are not have permession to access route",400) );
       };
 
       // const session = await redis.get(decoded.id as string);
@@ -287,7 +299,7 @@ export const updateAccessToken = CatchAsyncError(
 
       const accessToken = jwt.sign(
         // { id: user._id },
-        { id: decoded.id }, // new 
+        { id: decoded.id , deviceId:user.deviceId }, // new 
         process.env.ACCESS_TOKEN as string,
         {
           expiresIn: "5m",
@@ -296,7 +308,7 @@ export const updateAccessToken = CatchAsyncError(
 
       const refreshToken = jwt.sign(
         // { id: user._id },
-        { id: decoded.id }, // new
+        { id: decoded.id , deviceId:user.deviceId }, // new
         process.env.REFRESH_TOKEN as string,
         {
           expiresIn: "3d",
@@ -343,16 +355,20 @@ export const socialAuth = CatchAsyncError(
       const user = await userModel.findOne({ email });
       if (!user) {
         const newUser = await userModel.create({ email, name, avatar });
-        const deviceId=crypto.randomBytes(3).toString("hex");
-        req.session.deviceId=deviceId;
-        newUser.deviceId=deviceId;
+        const { macAddress,stderr }=await getMacAddress();
+        if( stderr ){
+          return next( new ErrorHandler("error on retrieving mac",400) );
+        };
+        newUser.deviceId=macAddress;
         await newUser.save();
         sendToken(newUser, 200, res);
       } else {
-        if( req.session.deviceId !== user.deviceId ){
-          return next(new ErrorHandler
-            ("you are not allowed please ask admin for permission", 400)
-          );
+        const { macAddress,stderr }=await getMacAddress();
+        if( stderr ){
+          return next( new ErrorHandler("error on retrieving mac",400) );
+        };
+        if( user.deviceId != macAddress ){
+          return next( new ErrorHandler("you are not have permession to access route",400) );
         };
         sendToken(user, 200, res);
       }
