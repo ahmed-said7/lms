@@ -16,9 +16,8 @@ import session from 'express-session';
 
 // body parser
 app.use(express.json({ limit: "50mb" }));
-
+app.use(express.urlencoded({extended:true}))
 // cookie parser
-app.use(cookieParser());
 
 // cors => cross origin resource sharing
 app.use(
@@ -40,6 +39,7 @@ app.use(session({
       ttl:2*365*24*60*60*1000
   })
 }));
+app.use(cookieParser());
 
 // api requests limit
 const limiter = rateLimit({
