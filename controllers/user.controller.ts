@@ -83,7 +83,7 @@ interface IActivationToken {
 
 export const createActivationToken = (user: any): IActivationToken => {
   const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
- 
+
   const token = jwt.sign(
     {
       user,
@@ -98,11 +98,57 @@ export const createActivationToken = (user: any): IActivationToken => {
   return { token, activationCode };
 };
 
+// export const loginFromAnotherDevice= CatchAsyncError(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const { email } = req.body;
+//       const isExist = await userModel.findOne({ email });
+//       if ( ! isExist ) {
+//         return next(new ErrorHandler("user not found", 400));
+//       };
+//       const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
+//       const token = jwt.sign
+//       (
+//         { email:isExist.email , activationCode }
+//         ,process.env.ACTIVATION_SECRET as Secret, 
+//         { expiresIn: "5h" } 
+//       );
+
+//       const data = { user: { name: isExist.name }, activationCode };
+//       const html = await ejs.renderFile(
+//         path.join(__dirname, "../mails/activation-mail.ejs"),
+//         data
+//       );
+
+//       try {
+//         await sendMail({
+//           email: isExist.email,
+//           subject: "Activate your account",
+//           template: "activation-mail.ejs",
+//           data,
+//         });
+
+//         res.status(201).json({
+//           success: true,
+//           message: `Please check your email: ${isExist.email} to activate your account!`,
+//           token: token,
+//         });
+//       } catch (error: any) {
+//         return next(new ErrorHandler(error.message, 400));
+//       }
+//     } catch (error: any) {
+//       return next(new ErrorHandler(error.message, 400));
+//     }
+//   }
+// );
+
+
 // activate user
 interface IActivationRequest {
   activation_token: string;
   activation_code: string;
 }
+
 
 export const activateUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {

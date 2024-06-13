@@ -6,7 +6,8 @@ import path from 'path';
 interface EmailOptions{
     email:string;
     subject:string;
-    template:string;
+    template?:string;
+    html?:string;
     data: {[key:string]:any};
 }
 
@@ -20,15 +21,14 @@ const sendMail = async (options: EmailOptions):Promise <void> => {
             pass: process.env.SMTP_PASSWORD,
         },
     });
-
-    const {email,subject,template,data} = options;
-
-    // get the pdath to the email template file
-    const templatePath = path.join(__dirname,'../mails',template);
-
+    const { email,subject,template,data } = options;
+    let html=options.html as string;
+    if( template ){
+        const templatePath = path.join(__dirname,'../mails',template);
     // Render the email template with EJS
-    const html:string = await ejs.renderFile(templatePath,data);
-
+        html= await ejs.renderFile(templatePath,data) as string;
+    };
+    // get the pdath to the email template file
     const mailOptions = {
         from: process.env.SMTP_MAIL,
         to: email,
