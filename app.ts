@@ -29,19 +29,19 @@ app.use(
 
 
 
-app.use(session({
-  saveUninitialized:true,
-  resave:false,
-  secret:'some secret',
-  cookie : {
+// app.use(session({
+//   saveUninitialized:true,
+//   resave:false,
+//   secret:'some secret',
+//   cookie : {
     
-    maxAge:2*365*24*60*60*1000
-  },
-  store : mongoStore.create({
-      mongoUrl: process.env.DB_URL,
-      ttl:2*365*24*60*60*1000
-  })
-}));
+//     maxAge:2*365*24*60*60*1000
+//   },
+//   store : mongoStore.create({
+//       mongoUrl: process.env.DB_URL,
+//       ttl:2*365*24*60*60*1000
+//   })
+// }));
 app.use(cookieParser());
 
 // api requests limit
