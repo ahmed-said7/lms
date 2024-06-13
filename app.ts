@@ -11,6 +11,8 @@ import notificationRouter from "./routes/notification.route";
 import analyticsRouter from "./routes/analytics.route";
 import layoutRouter from "./routes/layout.route";
 import { rateLimit } from 'express-rate-limit'
+import mongoStore from 'connect-mongo';
+import session from 'express-session';
 
 // body parser
 app.use(express.json({ limit: "50mb" }));
@@ -25,6 +27,19 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(session({
+  saveUninitialized:true,
+  resave:false,
+  secret:'some secret',
+  cookie : {
+    maxAge:2*365*24*60*60*1000
+  },
+  store : mongoStore.create({
+      mongoUrl: process.env.DB_URL,
+      ttl:2*365*24*60*60*1000
+  })
+}));
 
 // api requests limit
 const limiter = rateLimit({

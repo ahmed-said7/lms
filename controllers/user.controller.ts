@@ -12,6 +12,7 @@ import {
   refreshTokenOptions,
   sendToken,
 } from "../utils/jwt";
+import crypto from "crypto";
 // import { redis } from "../utils/redis";
 import {
   getAllUsersService,
@@ -37,7 +38,6 @@ export const registrationUser = CatchAsyncError(
       if (isEmailExist) {
         return next(new ErrorHandler("Email already exist", 400));
       }
-
       const user: IRegistrationBody = {
         name,
         email,
@@ -83,7 +83,7 @@ interface IActivationToken {
 
 export const createActivationToken = (user: any): IActivationToken => {
   const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
-
+ 
   const token = jwt.sign(
     {
       user,
@@ -131,7 +131,10 @@ export const activateUser = CatchAsyncError(
         email,
         password,
       });
-
+      const deviceId=crypto.randomBytes(3).toString("hex");
+      req.session.deviceId=deviceId;
+      user.deviceId=deviceId;
+      await user.save();
       res.status(201).json({
         success: true,
       });
@@ -169,7 +172,12 @@ export const loginUser = CatchAsyncError(
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email or password", 400));
       }
-    console.log('dhhdh',user)
+      if( req.session.deviceId !== user.deviceId ){
+        return next(new ErrorHandler
+          ("you are not allowed please ask admin for permission", 400)
+        );
+      };
+      console.log('dhhdh',user)
       sendToken(user, 200, res);
     } catch (error: any) {
 
@@ -217,6 +225,10 @@ export const updateAccessToken = CatchAsyncError(
               new ErrorHandler("user not found!", 400) // new
             ) // new
       };// new
+
+      if( user.deviceId !== req.session.deviceId ){
+        return next( new ErrorHandler("please ask admin for permession", 400) ) ;
+      };
 
       // const session = await redis.get(decoded.id as string);
       // if (!session) {
@@ -285,8 +297,17 @@ export const socialAuth = CatchAsyncError(
       const user = await userModel.findOne({ email });
       if (!user) {
         const newUser = await userModel.create({ email, name, avatar });
+        const deviceId=crypto.randomBytes(3).toString("hex");
+        req.session.deviceId=deviceId;
+        newUser.deviceId=deviceId;
+        await newUser.save();
         sendToken(newUser, 200, res);
       } else {
+        if( req.session.deviceId !== user.deviceId ){
+          return next(new ErrorHandler
+            ("you are not allowed please ask admin for permission", 400)
+          );
+        };
         sendToken(user, 200, res);
       }
     } catch (error: any) {

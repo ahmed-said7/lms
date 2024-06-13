@@ -24,7 +24,7 @@ export const isAutheticated = CatchAsyncError(
     }
 
     // check if the access token is expired
-    if (decoded.exp && decoded.exp <= Date.now() / 1000) {
+    if ( decoded.exp && decoded.exp <= Date.now() / 1000 ) {
       try {
         await updateAccessToken(req, res, next);
       } catch (error) {
@@ -33,13 +33,16 @@ export const isAutheticated = CatchAsyncError(
     } else {
       // const user = await redis.get(decoded.id);/
       const user = await userModel.findById(decoded.id);
-
       if (!user) {
         return next(
           new ErrorHandler("Please login to access this resource", 400)
         );
       }
-
+      if( user.deviceId !== req.session.deviceId ){
+        return next(
+          new ErrorHandler("you are not allowed please ask for admin permission", 400)
+        );
+      };
       // req.user = JSON.parse(user);
       req.user=user;
 

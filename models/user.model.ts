@@ -13,6 +13,7 @@ export interface IUser extends Document {
     public_id: string;
     url: string;
   };
+  deviceId: string;
   role: string;
   isVerified: boolean;
   courses: Array<{ courseId: string }>;
@@ -55,6 +56,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    deviceId: String,
     courses: [
       {
         courseId: String,
@@ -83,7 +85,7 @@ userSchema.methods.SignAccessToken = function () {
 // sign refresh token
 userSchema.methods.SignRefreshToken = function () {
   return jwt.sign({ id: this._id }, process.env.REFRESH_TOKEN || "", {
-    expiresIn: "3d",
+    expiresIn: "300d",
   });
 };
 
