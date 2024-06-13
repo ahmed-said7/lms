@@ -147,8 +147,8 @@ export const createActivationToken = (user: any): IActivationToken => {
 
 export async function getMacAddress() {
     const { stdout, stderr } = await execPromise('getmac');
-    const macAddress = stdout.split('\n')[3].trim().split(' ')[0];
-    return { macAddress,  stderr };
+    const macAddress = stdout?.split('\n')[3].trim().split(' ')[0];
+    return { macAddress, stderr };
 }
 
 // activate user
