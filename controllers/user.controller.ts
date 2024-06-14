@@ -174,16 +174,11 @@ export const changeDevice = CatchAsyncError(
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email or password", 400));
       }
-
-      const { macAddress,stderr }=await getMacAddress();
-      if( stderr ){
-        return next( new ErrorHandler("error on retrieving mac",400) );
-      };
-      console.log(user)
-      user.deviceId=macAddress;
+      const code=crypto.randomBytes(4).toString("hex");
+      user.deviceId=code;
+      req.session.deviceId=code;
       user.resetDeviceCode=undefined;
       await user.save();
-      console.log(user)
       sendToken(user, 200, res);
     
     } catch (error: any) {
@@ -232,11 +227,9 @@ export const activateUser = CatchAsyncError(
         email,
         password,
       });
-      const { macAddress,stderr }=await getMacAddress();
-      if( stderr ){
-        return next( new ErrorHandler("error on retrieving mac",400) );
-      };
-      user.deviceId=macAddress;
+      const code=crypto.randomBytes(4).toString("hex");
+      user.deviceId=code;
+      req.session.deviceId=code;
       await user.save();
       res.status(201).json({
         success: true,
@@ -254,9 +247,7 @@ interface ILoginRequest {
 }
 
 export const loginUser = CatchAsyncError(
-  
   async (req: Request, res: Response, next: NextFunction) => {
-    console.log('loginuser')
     try {
       const { email, password } = req.body as ILoginRequest;
 
@@ -269,16 +260,11 @@ export const loginUser = CatchAsyncError(
       if (!user) {
         return next(new ErrorHandler("Invalid email or password", 400));
       }
-
       const isPasswordMatch = await user.comparePassword(password);
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email or password", 400));
       }
-      const { macAddress,stderr }=await getMacAddress();
-      if( stderr ){
-        return next( new ErrorHandler("error on retrieving mac",400) );
-      };
-      if( user.deviceId != macAddress ){
+      if( user.deviceId != req.session.deviceId ){
         return next( new ErrorHandler("you are not have permession to access route",400) );
       };
       sendToken(user, 200, res);
@@ -326,12 +312,7 @@ export const updateAccessToken = CatchAsyncError(
               new ErrorHandler("user not found!", 400) // new
             ) // new
       };// new
-
-      const { macAddress,stderr }=await getMacAddress();
-      if( stderr ){
-        return next( new ErrorHandler("error on retrieving mac",400) );
-      };
-      if( user.deviceId != macAddress || user.deviceId != decoded.deviceId ){
+      if( user.deviceId != req.session.deviceId ){
         return next( new ErrorHandler("you are not have permession to access route",400) );
       };
 
@@ -402,19 +383,13 @@ export const socialAuth = CatchAsyncError(
       const user = await userModel.findOne({ email });
       if (!user) {
         const newUser = await userModel.create({ email, name, avatar });
-        const { macAddress,stderr }=await getMacAddress();
-        if( stderr ){
-          return next( new ErrorHandler("error on retrieving mac",400) );
-        };
-        newUser.deviceId=macAddress;
+        const code=crypto.randomBytes(4).toString("hex");
+        req.session.deviceId=code;
+        newUser.deviceId=code;
         await newUser.save();
         sendToken(newUser, 200, res);
       } else {
-        const { macAddress,stderr }=await getMacAddress();
-        if( stderr ){
-          return next( new ErrorHandler("error on retrieving mac",400) );
-        };
-        if( user.deviceId != macAddress ){
+        if( user.deviceId != req.session.deviceId ){
           return next( new ErrorHandler("you are not have permession to access route",400) );
         };
         sendToken(user, 200, res);
