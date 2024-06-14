@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const crypto= require('crypto');
 const uuid = require('uuid').v4;
 const mongoStore=require("connect-mongo");
 const app = express();
@@ -34,7 +35,7 @@ const user = {
 
 // Middleware to check user authentication
 function requireLogin(req, res, next) {
-    // console.log(req.session);
+    console.log(req.session);
     if (req.session.userId !== user.deviceId ) {
         return res.status(401).send('Unauthorized');
     }
@@ -47,7 +48,7 @@ app.get('/login', (req, res) => {
     user.deviceId=code;
     // Simulated authentication logic (replace with real authentication
     req.session.userId = code;
-    res.send('Login successful');
+    res.send('Login successful'+JSON.stringify(req.session));
 });
 
 // Endpoint for subscription
