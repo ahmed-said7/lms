@@ -23,7 +23,7 @@ userRouter.post("/registration", registrationUser);
 userRouter.post("/activate-user", activateUser);
 
 userRouter.post("/login", loginUser);
-userRouter.post("/request-change-device", isAutheticated ,requestToLoginFromAnotherDevice);
+userRouter.post("/request-change-device",isAutheticated,requestToLoginFromAnotherDevice);
 userRouter.post("/change-device", changeDevice);
 
 userRouter.get("/logout",isAutheticated, logoutUser);

@@ -7,9 +7,6 @@ import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 import ejs from "ejs";
 import path from "path";
 import sendMail from "../utils/sendMail";
-import util from 'util';
-import { exec } from  'child_process';
-const execPromise = util.promisify(exec);
 import {
   accessTokenOptions,
   refreshTokenOptions,
@@ -37,7 +34,6 @@ export const registrationUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { name, email, password } = req.body;
-
       const isEmailExist = await userModel.findOne({ email });
       if (isEmailExist) {
         return next(new ErrorHandler("Email already exist", 400));
@@ -121,14 +117,12 @@ export const requestToLoginFromAnotherDevice= CatchAsyncError(
       await isExist.save();
       const link=`${process.env.FRONTEND}/change-device/${token}`;
       const html = resetDeviceHTML(isExist.name,link);
-
       try {
         await sendMail({
           email: isExist.email,
           subject: "login from another device",
           html
         });
-        console.log(token);
         res.status(201).json({
           success: true,
           message: `Please check your email: ${isExist.email} to change device`
@@ -153,23 +147,17 @@ export const changeDevice = CatchAsyncError(
         token,
         process.env.ACTIVATION_SECRET as string
       ) as { email: string, code: string };
-      
       if(!decoded){
         return next( new ErrorHandler("invalid token",400) );
       };
-
       const user = await userModel.findOne({ email : decoded.email })
         .select("+password");
-
       if (!user) {
         return next(new ErrorHandler("Invalid email or password", 400));
       }
-      
       if( user.resetDeviceCode != decoded.code ){
         return next(new ErrorHandler("device has been already changed", 400));
       };
-
-
       const isPasswordMatch = await user.comparePassword(password);
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email or password", 400));
@@ -180,18 +168,11 @@ export const changeDevice = CatchAsyncError(
       user.resetDeviceCode=undefined;
       await user.save();
       sendToken(user, 200, res);
-    
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
   }
 );
-
-export async function getMacAddress() {
-    const { stdout, stderr } = await execPromise('getmac');
-    const macAddress = stdout?.split('\n')[3].trim().split(' ')[0];
-    return { macAddress, stderr };
-}
 
 // activate user
 interface IActivationRequest {

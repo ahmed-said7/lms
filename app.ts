@@ -17,6 +17,7 @@ import session from 'express-session';
 // body parser
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({extended:true}))
+app.use(cookieParser());
 // cookie parser
 
 // cors => cross origin resource sharing
@@ -28,22 +29,19 @@ app.use(
 );
 
 
-
 app.use(session({
+  name:"Session_Id",
   saveUninitialized:true,
   resave:false,
   secret:'some secret',
   cookie : {
-    
-    maxAge:2*365*24*60*60*1000
+    maxAge:4*365*24*60*60*1000
   },
   store : mongoStore.create({
-      mongoUrl: process.env.DB_URL,
-      ttl:2*365*24*60*60*1000
+    mongoUrl:process.env.DB_URL,
+    ttl:4*365*24*60*60*1000
   })
 }));
-
-app.use(cookieParser());
 
 // api requests limit
 const limiter = rateLimit({
@@ -63,14 +61,6 @@ app.use(
   analyticsRouter,
   layoutRouter
 );
-
-// testing api
-app.get("/test", (req: Request, res: Response, next: NextFunction) => {
-  res.status(200).json({
-    succcess: true,
-    message: "API is working",
-  });
-});
 
 // unknown route
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
