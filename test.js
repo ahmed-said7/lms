@@ -27,12 +27,15 @@ app.use(session({
 }));
 
 // Simulated user accounts stored in memory (replace with a real database)
-const users = {};
+const user = {
+    name : "user",
+    deviceId:"handasa"
+};
 
 // Middleware to check user authentication
 function requireLogin(req, res, next) {
-    console.log(req.session);
-    if (req.session.userId !== "handasa") {
+    // console.log(req.session);
+    if (req.session.userId !== user.deviceId ) {
         return res.status(401).send('Unauthorized');
     }
     next();
@@ -40,8 +43,10 @@ function requireLogin(req, res, next) {
 
 // Endpoint for user authentication
 app.get('/login', (req, res) => {
+    const code=crypto.randomBytes(4).toString("hex");
+    user.deviceId=code;
     // Simulated authentication logic (replace with real authentication
-    req.session.userId = "handasa";
+    req.session.userId = code;
     res.send('Login successful');
 });
 
