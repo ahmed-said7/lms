@@ -3,7 +3,10 @@ import { CatchAsyncError } from "./catchAsyncErrors";
 import ErrorHandler from "../utils/ErrorHandler";
 import jwt, { JwtPayload } from "jsonwebtoken";
 // import { redis } from "../utils/redis";
-import { getMacAddress, updateAccessToken } from "../controllers/user.controller";
+import {
+  getMacAddress,
+  updateAccessToken,
+} from "../controllers/user.controller";
 import userModel from "../models/user.model";
 
 // authenticated user
@@ -24,7 +27,7 @@ export const isAutheticated = CatchAsyncError(
     }
 
     // check if the access token is expired
-    if ( decoded.exp && decoded.exp <= Date.now() / 1000 ) {
+    if (decoded.exp && decoded.exp <= Date.now() / 1000) {
       try {
         await updateAccessToken(req, res, next);
       } catch (error) {
@@ -38,15 +41,19 @@ export const isAutheticated = CatchAsyncError(
           new ErrorHandler("Please login to access this resource", 400)
         );
       }
-      const { macAddress,stderr }=await getMacAddress();
-      if( stderr ){
-        return next( new ErrorHandler("error on retrieving mac",400) );
-      };
-      if( user.deviceId != macAddress || user.deviceId != decoded.deviceId ){
-        return next( new ErrorHandler("you are not have permession to access route",400) );
-      };
+      const { macAddress, stderr } = await getMacAddress();
+      if (stderr) {
+        return next(new ErrorHandler("error on retrieving mac", 400));
+      }
+      /*
+      if (user.deviceId != macAddress || user.deviceId != decoded.deviceId) {
+        return next(
+          new ErrorHandler("you are not have permession to access route", 400)
+        );
+      }
+        */
       // req.user = JSON.parse(user);
-      req.user=user;
+      req.user = user;
 
       next();
     }
@@ -56,7 +63,10 @@ export const isAutheticated = CatchAsyncError(
 // validate user role
 export const authorizeRoles = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
+    // console.log("role :", req.user?.role);
     if (!roles.includes(req.user?.role || "")) {
+      console.log("role :", req.user?.role);
+
       return next(
         new ErrorHandler(
           `Role: ${req.user?.role} is not allowed to access this resource`,

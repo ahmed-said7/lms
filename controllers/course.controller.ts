@@ -45,7 +45,7 @@ export const editCourse = CatchAsyncError(
 
       const courseId = req.params.id;
 
-      const courseData = await CourseModel.findById(courseId) as any;
+      const courseData = (await CourseModel.findById(courseId)) as any;
 
       if (thumbnail && !thumbnail.startsWith("https")) {
         await cloudinary.v2.uploader.destroy(courseData.thumbnail.public_id);
@@ -92,22 +92,22 @@ export const getSingleCourse = CatchAsyncError(
       // const courseId = req.params.id;
       // const isCacheExist = await redis.get(courseId);
       // if (isCacheExist) {
-        // const course = JSON.parse(isCacheExist);
-        // res.status(200).json({
-        //   success: true,
-        //   course,
-        // });
+      // const course = JSON.parse(isCacheExist);
+      // res.status(200).json({
+      //   success: true,
+      //   course,
+      // });
       // } else {
-        const course = await CourseModel.findById(req.params.id).select(
-          "-courseData.videoUrl -courseData.suggestion -courseData.questions -courseData.links"
-        );
+      const course = await CourseModel.findById(req.params.id).select(
+        "-courseData.videoUrl -courseData.suggestion -courseData.questions -courseData.links"
+      );
 
-        // await redis.set(courseId, JSON.stringify(course), "EX", 604800); // 7days
+      // await redis.set(courseId, JSON.stringify(course), "EX", 604800); // 7days
 
-        res.status(200).json({
-          success: true,
-          course,
-        });
+      res.status(200).json({
+        success: true,
+        course,
+      });
       // }
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
@@ -365,7 +365,6 @@ export const addReview = CatchAsyncError(
         message: `${req.user?.name} has given a review in ${course?.name}`,
       });
 
-
       res.status(200).json({
         success: true,
         course,
@@ -413,7 +412,7 @@ export const addReplyToReview = CatchAsyncError(
       }
 
       review.commentReplies?.push(replyData);
-      
+
       await course?.save();
 
       // await redis.set(courseId, JSON.stringify(course), "EX", 604800); // 7days

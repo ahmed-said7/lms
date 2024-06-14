@@ -10,13 +10,15 @@ import orderRouter from "./routes/order.route";
 import notificationRouter from "./routes/notification.route";
 import analyticsRouter from "./routes/analytics.route";
 import layoutRouter from "./routes/layout.route";
-import { rateLimit } from 'express-rate-limit'
-import mongoStore from 'connect-mongo';
-import session from 'express-session';
+import quizRouter from "./routes/quiz.route";
+import { rateLimit } from "express-rate-limit";
+import mongoStore from "connect-mongo";
+import session from "express-session";
+import questionRouter from "./routes/question.route";
 
 // body parser
 app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({extended:true}))
+app.use(express.urlencoded({ extended: true }));
 // cookie parser
 
 // cors => cross origin resource sharing
@@ -27,31 +29,30 @@ app.use(
   })
 );
 
-
-
-app.use(session({
-  saveUninitialized:true,
-  resave:false,
-  secret:'some secret',
-  cookie : {
-    
-    maxAge:2*365*24*60*60*1000
-  },
-  store : mongoStore.create({
+app.use(
+  session({
+    saveUninitialized: true,
+    resave: false,
+    secret: "some secret",
+    cookie: {
+      maxAge: 2 * 365 * 24 * 60 * 60 * 1000,
+    },
+    store: mongoStore.create({
       mongoUrl: process.env.DB_URL,
-      ttl:2*365*24*60*60*1000
+      ttl: 2 * 365 * 24 * 60 * 60 * 1000,
+    }),
   })
-}));
+);
 
 app.use(cookieParser());
 
 // api requests limit
 const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000,
-	max: 100, 
-	standardHeaders: 'draft-7', 
-	legacyHeaders: false, 
-})
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+});
 
 // routes
 app.use(
@@ -61,7 +62,9 @@ app.use(
   courseRouter,
   notificationRouter,
   analyticsRouter,
-  layoutRouter
+  layoutRouter,
+  quizRouter,
+  questionRouter
 );
 
 // testing api
