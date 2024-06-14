@@ -245,7 +245,7 @@ export const loginUser = CatchAsyncError(
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email or password", 400));
       }
-      if( user.deviceId != req.session.deviceId ){
+      if( user.deviceId != req.session.deviceId && user.role == "user" ){
         return next( new ErrorHandler("you are not have permession to access route",400) );
       };
       sendToken(user, 200, res);
@@ -293,7 +293,7 @@ export const updateAccessToken = CatchAsyncError(
               new ErrorHandler("user not found!", 400) // new
             ) // new
       };// new
-      if( user.deviceId != req.session.deviceId ){
+      if( user.deviceId != req.session.deviceId && user.role == "user" ){
         return next( new ErrorHandler("you are not have permession to access route",400) );
       };
 
@@ -370,7 +370,7 @@ export const socialAuth = CatchAsyncError(
         await newUser.save();
         sendToken(newUser, 200, res);
       } else {
-        if( user.deviceId != req.session.deviceId ){
+        if( user.deviceId != req.session.deviceId && user.role == "user" ){
           return next( new ErrorHandler("you are not have permession to access route",400) );
         };
         sendToken(user, 200, res);
