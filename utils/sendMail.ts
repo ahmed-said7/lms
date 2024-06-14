@@ -8,7 +8,7 @@ interface EmailOptions{
     subject:string;
     template?:string;
     html?:string;
-    data: {[key:string]:any};
+    data?: {[key:string]:any};
 }
 
 const sendMail = async (options: EmailOptions):Promise <void> => {
@@ -23,7 +23,7 @@ const sendMail = async (options: EmailOptions):Promise <void> => {
     });
     const { email,subject,template,data } = options;
     let html=options.html as string;
-    if( template ){
+    if( template && data ){
         const templatePath = path.join(__dirname,'../mails',template);
     // Render the email template with EJS
         html= await ejs.renderFile(templatePath,data) as string;

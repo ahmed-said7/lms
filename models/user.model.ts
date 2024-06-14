@@ -13,9 +13,10 @@ export interface IUser extends Document {
     public_id: string;
     url: string;
   };
-  deviceId: string;
+  deviceId?: string;
   role: string;
   isVerified: boolean;
+  resetDeviceCode?:string;
   courses: Array<{ courseId: string }>;
   comparePassword: (password: string) => Promise<boolean>;
   SignAccessToken: () => string;
@@ -56,6 +57,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    resetDeviceCode:String,
     deviceId: String,
     courses: [
       {

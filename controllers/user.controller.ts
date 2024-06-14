@@ -23,6 +23,7 @@ import {
   updateUserRoleService,
 } from "../services/user.service";
 import cloudinary from "cloudinary";
+import { resetDeviceHTML } from "../mails/change-device";
 
 // register user
 interface IRegistrationBody {
@@ -101,49 +102,95 @@ export const createActivationToken = (user: any): IActivationToken => {
   return { token, activationCode };
 };
 
-// export const loginFromAnotherDevice= CatchAsyncError(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       const { email } = req.body;
-//       const isExist = await userModel.findOne({ email });
-//       if ( ! isExist ) {
-//         return next(new ErrorHandler("user not found", 400));
-//       };
-//       const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
-//       const token = jwt.sign
-//       (
-//         { email:isExist.email , activationCode }
-//         ,process.env.ACTIVATION_SECRET as Secret, 
-//         { expiresIn: "5h" } 
-//       );
+export const requestToLoginFromAnotherDevice= CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body;
+      const isExist = await userModel.findOne({ email });
+      if ( ! isExist ) {
+        return next(new ErrorHandler("user not found", 400));
+      };
+      const code=Math.floor(1000 + Math.random() * 9000).toString()
+      const token = jwt.sign
+      (
+        { email : isExist.email , code }
+        ,process.env.ACTIVATION_SECRET as Secret, 
+        { expiresIn: "5h" } 
+      );
+      isExist.resetDeviceCode=code;
+      await isExist.save();
+      const link=`${process.env.FRONTEND}/change-device/${token}`;
+      const html = resetDeviceHTML(isExist.name,link);
 
-//       const data = { user: { name: isExist.name }, activationCode };
-//       const html = await ejs.renderFile(
-//         path.join(__dirname, "../mails/activation-mail.ejs"),
-//         data
-//       );
+      try {
+        await sendMail({
+          email: isExist.email,
+          subject: "login from another device",
+          html
+        });
+        console.log(token);
+        res.status(201).json({
+          success: true,
+          message: `Please check your email: ${isExist.email} to change device`
+        });
+      } catch (error: any) {
+        return next(new ErrorHandler(error.message, 400));
+      }
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
 
-//       try {
-//         await sendMail({
-//           email: isExist.email,
-//           subject: "Activate your account",
-//           template: "activation-mail.ejs",
-//           data,
-//         });
+export const changeDevice = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token, password } = req.body;
+      if( !token || !password ){
+        return next( new ErrorHandler("token and password are required" , 400) )
+      };
+      const decoded  = jwt.verify(
+        token,
+        process.env.ACTIVATION_SECRET as string
+      ) as { email: string, code: string };
+      
+      if(!decoded){
+        return next( new ErrorHandler("invalid token",400) );
+      };
 
-//         res.status(201).json({
-//           success: true,
-//           message: `Please check your email: ${isExist.email} to activate your account!`,
-//           token: token,
-//         });
-//       } catch (error: any) {
-//         return next(new ErrorHandler(error.message, 400));
-//       }
-//     } catch (error: any) {
-//       return next(new ErrorHandler(error.message, 400));
-//     }
-//   }
-// );
+      const user = await userModel.findOne({ email : decoded.email })
+        .select("+password");
+
+      if (!user) {
+        return next(new ErrorHandler("Invalid email or password", 400));
+      }
+      
+      if( user.resetDeviceCode != decoded.code ){
+        return next(new ErrorHandler("device has been already changed", 400));
+      };
+
+
+      const isPasswordMatch = await user.comparePassword(password);
+      if (!isPasswordMatch) {
+        return next(new ErrorHandler("Invalid email or password", 400));
+      }
+
+      const { macAddress,stderr }=await getMacAddress();
+      if( stderr ){
+        return next( new ErrorHandler("error on retrieving mac",400) );
+      };
+      console.log(user)
+      user.deviceId=macAddress;
+      user.resetDeviceCode=undefined;
+      await user.save();
+      console.log(user)
+      sendToken(user, 200, res);
+    
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
 
 export async function getMacAddress() {
     const { stdout, stderr } = await execPromise('getmac');
