@@ -15,10 +15,7 @@ export interface IUser extends Document {
   };
   quizes: {
     quiz: Schema.Types.ObjectId;
-    ref: "Quiz";
-    takenAt: Date;
-    degree: String;
-    totalDegree: String;
+    ref: "Result";
   };
   deviceId?: string;
   role: string;
@@ -72,13 +69,12 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
         courseId: String,
       },
     ],
-    quizes: {
-      type: Schema.Types.ObjectId,
-      ref: "Quiz",
-      takenAt: Date,
-      degree: String,
-      totalDegree: String,
-    },
+    quizes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Result",
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -96,6 +92,14 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
 /*
 [{ questionId: string, answar: string }];
  */
+
+//populating quizes
+
+userSchema.pre<IUser>(/^find/, function (next) {
+  this.populate({ path: "quizes" });
+  next();
+});
+
 // Hash Password before saving
 userSchema.pre<IUser>("save", async function (next) {
   if (!this.isModified("password")) {

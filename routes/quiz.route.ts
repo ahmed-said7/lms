@@ -7,6 +7,7 @@ import {
   deleteQuiz,
   getAllQuizes,
   getQuiz,
+  takeQuiz,
   updateQuiz,
 } from "../controllers/quiz.controller";
 import { authorizeRoles, isAutheticated } from "../middleware/auth";
@@ -33,5 +34,6 @@ quizRouter.delete(
 );
 quizRouter.get("/get-quiz/:quizId", isAutheticated, getQuiz);
 quizRouter.get("/get-All-quizes", isAutheticated, getAllQuizes);
+quizRouter.post("/take-quiz/:quizId", isAutheticated, takeQuiz);
 
 export default quizRouter;
