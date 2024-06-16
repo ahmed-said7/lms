@@ -4,6 +4,7 @@ interface IResult extends Document {
   degree: Number;
   totalDegree: Number;
   course: Schema.Types.ObjectId;
+  user: Schema.Types.ObjectId;
 }
 
 const resultSchema = new Schema<IResult>(
@@ -11,6 +12,10 @@ const resultSchema = new Schema<IResult>(
     quiz: {
       type: Schema.Types.ObjectId,
       required: [true, "a result must belong to quiz"],
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
     course: {
       type: Schema.Types.ObjectId,

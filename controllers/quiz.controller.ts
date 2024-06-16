@@ -36,7 +36,7 @@ export const updateQuiz = CatchAsyncError(
       if (!quiz) {
         return next(new ErrorHandler("no quiz found", 404));
       }
-      res.status(204).json({
+      res.status(200).json({
         success: true,
         quiz,
       });
@@ -63,44 +63,50 @@ export const deleteQuiz = CatchAsyncError(
   }
 );
 
-export const getQuiz = CatchAsyncError(
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const quizId = req.params.id;
-      const quiz = await quizModel.findById(quizId);
-      res.status(201).json({
-        success: true,
-        quiz,
-      });
-    } catch (error: any) {
-      return next(new ErrorHandler(error.message, 500));
-    }
-  }
-);
-
 export const getAllQuizes = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      let courseId = "";
-      if (req.params.id) {
-        courseId = req.params.id;
-      }
-      if (!req.user?.role == "admin") {
-        const user = await userModel.findById(req.user?.id);
-
-        if (!req.user?.courses.includes({ courseId })) {
+      let filter = {};
+      if (req.params.id) filter = { courseId: req.params.id };
+      let quiz = [];
+      if (req.user?.role === "admin") {
+        //console.log("hello from here 1");
+        quiz = await quizModel.find(filter).populate({
+          path: "results",
+          select: "degree -quiz",
+          populate: { path: "user", select: "name" },
+        });
+        // quiz.map(el=>{
+        //   el.populate()
+        // })
+        //console.log("results", quiz.results);
+      } else {
+        //req.user?.courses.push({ courseId: "666b97a594238ca851ed4e42" });
+        //console.log(req.user?.courses);
+        if (req.user?.courses.length === 0) {
+          //console.log("helo from 4");
           return next(
             new ErrorHandler(
-              "you must enroll to course first to see quizes",
+              "you must enroll to courses first to see courses quizes",
               403
             )
           );
         }
+        if (allowUserToQuiz(req.user?.courses, req.params.id)) {
+          //console.log("hello from here 2");
+          quiz = await quizModel.find({ courseId: req.params.id });
+        } else {
+          console.log(req.user?.courses);
+          quiz = await quizModel.find({
+            courseId: { $in: req.user?.courses },
+          });
+          //console.log("hello from here 3");
+        }
       }
-      const quizes = await quizModel.find({});
-      res.status(201).json({
+      res.status(200).json({
         success: true,
-        quizes,
+        result: quiz.length,
+        quiz,
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
@@ -111,13 +117,67 @@ export const getAllQuizes = CatchAsyncError(
 export const takeQuiz = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const quiz = await quizModel.findById(req.params.quizId);
+      //req.user?.courses.push({ courseId: "666b97a594238ca851ed4e42" });
+      if (!quiz) {
+        return next(new ErrorHandler("there is no quiz with this id", 404));
+      }
+      if (quiz?.startDate > Date.now()) {
+        return next(new ErrorHandler("quiz is not started yet", 400));
+      }
+
+      if (!allowUserToQuiz(req.user?.courses, quiz.courseId)) {
+        return next(new ErrorHandler("you must enroll course first", 403));
+      }
+
+      if (quiz?.endDate < Date.now()) {
+        return next(new ErrorHandler("sorry quiz time out", 400));
+      }
+      //checkQuizVaildation(quiz, req, next);
+      const questions = await questionModel.find({ quiz: quiz._id });
+      res.status(201).json({
+        success: true,
+        results: questions.length,
+        questions,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
+export const submitQuiz = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const quiz = await quizModel.findById(req.params.quizId);
+      //req.user?.courses.push({ courseId: "666b97a594238ca851ed4e42" });
+
+      if (!quiz) {
+        return next(new ErrorHandler("there is no quiz with this id", 404));
+      }
+      if (quiz?.startDate > Date.now()) {
+        return next(new ErrorHandler("quiz is not started yet", 400));
+      }
+
+      if (!allowUserToQuiz(req.user?.courses, quiz.courseId)) {
+        return next(new ErrorHandler("you must enroll course first", 403));
+      }
+
+      if (quiz?.endDate < Date.now()) {
+        return next(
+          new ErrorHandler(
+            "sorry quiz time out and your answers are not sent",
+            400
+          )
+        );
+      }
       //req.body contains question Id and aswar
       const userAnswars = req.body.answars;
       // console.log(userAnswars);
-      const user = await userModel.findById(req.user?.id);
-      const quesions = await questionModel.find({ quiz: req.params.quizId });
+      const user = req.user;
+      const quesions = await questionModel.find({ quiz: quiz?._id });
       // console.log(quesions);
-      const quiz = await quizModel.findById(req.params.quizId);
+
       const courseId = quiz?.courseId;
       let deg = 0;
       //console.log(data.answars[0].question);
@@ -136,16 +196,70 @@ export const takeQuiz = CatchAsyncError(
         }
       });
       const result = await resultModel.create({
-        quiz: req.params.quizId,
+        quiz: quiz?._id,
         degree: deg,
         totalDegree: quiz?.totalDegree,
         course: courseId,
+        user: req.user?.id,
       });
       user?.quizes.push(result._id);
       await user?.save();
       res.status(201).json({
         success: true,
         result,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
+const allowUserToQuiz = (courses: [], quizId: any) => {
+  let found: boolean = false;
+  courses.map((el) => {
+    if (el.courseId.toString() === quizId.toString()) {
+      found = true;
+      return found;
+    }
+  });
+  return found;
+};
+
+const checkQuizVaildation = (
+  quiz: object,
+  req: Request,
+  next: NextFunction
+) => {
+  if (!quiz) {
+    return next(new ErrorHandler("there is no quiz with this id", 404));
+  }
+  if (quiz?.startDate > Date.now()) {
+    return next(new ErrorHandler("quiz is not started yet", 400));
+  }
+  if (!allowUserToQuiz(req.user?.courses, quiz.courseId)) {
+    return next(new ErrorHandler("you must enroll course first", 403));
+  }
+  if (quiz?.endDate < Date.now()) {
+    return next(
+      new ErrorHandler("sorry quiz time out your answers is not sent", 400)
+    );
+  }
+};
+
+export const getMyResults = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (req.user?.quizes.length === 0) {
+        return next(new ErrorHandler("there is no results to display", 404));
+      }
+
+      const myResults = (
+        await req.user?.populate({ path: "quizes", select: "-user" })
+      ).quizes;
+      res.status(201).json({
+        success: true,
+        result: myResults.length,
+        myResults,
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));

@@ -15,6 +15,7 @@ import { rateLimit } from "express-rate-limit";
 import mongoStore from "connect-mongo";
 import session from "express-session";
 import questionRouter from "./routes/question.route";
+import resultRouter from "./routes/result.model";
 
 // body parser
 app.use(express.json({ limit: "50mb" }));
@@ -64,7 +65,8 @@ app.use(
   analyticsRouter,
   layoutRouter,
   quizRouter,
-  questionRouter
+  questionRouter,
+  resultRouter
 );
 
 // testing api

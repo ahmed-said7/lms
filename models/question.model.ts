@@ -23,7 +23,10 @@ const questionSchema = new Schema<IQuestion>({
     // required: [true, "a quiz must have total degree"],
   },
   answers: [String],
-  correctAnswer: String,
+  correctAnswer: {
+    type: String,
+    // enum: this.answers,
+  },
 });
 const questionModel: Model<IQuestion> = mongoose.model(
   "Question",

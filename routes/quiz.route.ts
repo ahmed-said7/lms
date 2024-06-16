@@ -7,6 +7,7 @@ import {
   deleteQuiz,
   getAllQuizes,
   getQuiz,
+  submitQuiz,
   takeQuiz,
   updateQuiz,
 } from "../controllers/quiz.controller";
@@ -32,8 +33,18 @@ quizRouter.delete(
   authorizeRoles("admin"),
   deleteQuiz
 );
-quizRouter.get("/get-quiz/:quizId", isAutheticated, getQuiz);
+quizRouter.get(
+  "/take-quiz/:quizId",
+  isAutheticated,
+  authorizeRoles("user"),
+  takeQuiz
+); // get questions of quiz for user
 quizRouter.get("/get-All-quizes", isAutheticated, getAllQuizes);
-quizRouter.post("/take-quiz/:quizId", isAutheticated, takeQuiz);
+quizRouter.post(
+  "/submit-quiz/:quizId",
+  isAutheticated,
+  authorizeRoles("user"),
+  submitQuiz
+);
 
 export default quizRouter;

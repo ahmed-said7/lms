@@ -22,7 +22,6 @@ export interface IUser extends Document {
   isVerified: boolean;
   resetDeviceCode?: string;
   courses: Array<{ courseId: string }>;
-  coursesCreated: Array<{ courseId: Schema.Types.ObjectId }>;
   comparePassword: (password: string) => Promise<boolean>;
   SignAccessToken: () => string;
   SignRefreshToken: () => string;
@@ -94,12 +93,12 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
  */
 
 //populating quizes
-
+/*
 userSchema.pre<IUser>(/^find/, function (next) {
   this.populate({ path: "quizes" });
   next();
 });
-
+*/
 // Hash Password before saving
 userSchema.pre<IUser>("save", async function (next) {
   if (!this.isModified("password")) {

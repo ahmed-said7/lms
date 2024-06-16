@@ -4,7 +4,9 @@ interface IQuiz extends Document {
   courseId: Schema.Types.ObjectId;
   totalDegree: Number;
   isOpened: boolean;
-  questions: [];
+  quizType: String;
+  startDate: Date;
+  endDate: Date;
 }
 
 const quizSchema = new Schema<IQuiz>(
@@ -27,8 +29,36 @@ const quizSchema = new Schema<IQuiz>(
       default: true,
     },
     //questions: [Schema.Types.ObjectId],
+    startDate: {
+      type: Date,
+      required: [true, "a quiz must have start Date"],
+    },
+    endDate: {
+      type: Date,
+      required: [true, "a quiz must have end Date"],
+      validate: {
+        validator: function (date: Date) {
+          return date > this.startDate;
+        },
+        message: `endDate must greater than start Date`,
+      },
+    },
+    quizType: {
+      type: String,
+      default: "homework",
+      enum: ["exam", "homework"],
+    },
   },
-  { timestamps: true }
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+    timestamps: true,
+  }
 );
+quizSchema.virtual("results", {
+  ref: "Result",
+  localField: "_id",
+  foreignField: "quiz",
+});
 const quizModel: Model<IQuiz> = mongoose.model("Quiz", quizSchema);
 export default quizModel;

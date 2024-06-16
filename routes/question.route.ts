@@ -30,5 +30,10 @@ questionRouter.delete(
   authorizeRoles("admin"),
   deleteQuestion
 );
-questionRouter.get("/getAllQuesions", isAutheticated, getAllQuestions);
+questionRouter.get(
+  "/getAllQuesions",
+  isAutheticated,
+  authorizeRoles("admin"),
+  getAllQuestions
+);
 export default questionRouter;
