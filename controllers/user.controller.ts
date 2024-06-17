@@ -21,6 +21,7 @@ import {
 } from "../services/user.service";
 import cloudinary from "cloudinary";
 import { resetDeviceHTML } from "../mails/change-device";
+import { request } from "http";
 
 // register user
 interface IRegistrationBody {
@@ -98,22 +99,21 @@ export const createActivationToken = (user: any): IActivationToken => {
   return { token, activationCode };
 };
 
-export const requestToLoginFromAnotherDevice= CatchAsyncError(
+export const requestToLoginFromAnotherDevice = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { email } = req.body;
       const isExist = await userModel.findOne({ email });
-      if ( ! isExist ) {
+      if (!isExist) {
         return next(new ErrorHandler("user not found", 400));
-      };
-      const code=Math.floor(1000 + Math.random() * 9000).toString()
-      const token = jwt.sign
-      (
-        { email : isExist.email , code }
-        ,process.env.ACTIVATION_SECRET as Secret, 
-        { expiresIn: "5h" } 
+      }
+      const code = Math.floor(1000 + Math.random() * 9000).toString();
+      const token = jwt.sign(
+        { email: isExist.email, code },
+        process.env.ACTIVATION_SECRET as Secret,
+        { expiresIn: "5h" }
       );
-      isExist.resetDeviceCode=code;
+      isExist.resetDeviceCode = code;
       await isExist.save();
       const link=`${process.env.FRONTEND}/change-device/${token}`;
       const html = resetDeviceHTML(isExist.name,link);
@@ -121,11 +121,11 @@ export const requestToLoginFromAnotherDevice= CatchAsyncError(
         await sendMail({
           email: isExist.email,
           subject: "login from another device",
-          html
+          html,
         });
         res.status(201).json({
           success: true,
-          message: `Please check your email: ${isExist.email} to change device`
+          message: `Please check your email: ${isExist.email} to change device`,
         });
       } catch (error: any) {
         return next(new ErrorHandler(error.message, 400));
@@ -140,10 +140,10 @@ export const changeDevice = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { token, password } = req.body;
-      if( !token || !password ){
-        return next( new ErrorHandler("token and password are required" , 400) )
-      };
-      const decoded  = jwt.verify(
+      if (!token || !password) {
+        return next(new ErrorHandler("token and password are required", 400));
+      }
+      const decoded = jwt.verify(
         token,
         process.env.ACTIVATION_SECRET as string
       ) as { email: string, code: string };
@@ -162,10 +162,10 @@ export const changeDevice = CatchAsyncError(
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email or password", 400));
       }
-      const code=crypto.randomBytes(4).toString("hex");
-      user.deviceId=code;
-      req.session.deviceId=code;
-      user.resetDeviceCode=undefined;
+      const code = crypto.randomBytes(4).toString("hex");
+      user.deviceId = code;
+      req.session.deviceId = code;
+      user.resetDeviceCode = undefined;
       await user.save();
       sendToken(user, 200, res);
     } catch (error: any) {
@@ -174,12 +174,12 @@ export const changeDevice = CatchAsyncError(
   }
 );
 
+
 // activate user
 interface IActivationRequest {
   activation_token: string;
   activation_code: string;
 }
-
 
 export const activateUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -208,10 +208,11 @@ export const activateUser = CatchAsyncError(
         email,
         password,
       });
-      const code=crypto.randomBytes(4).toString("hex");
-      user.deviceId=code;
-      req.session.deviceId=code;
+      const code = crypto.randomBytes(4).toString("hex");
+      user.deviceId = code;
+      req.session.deviceId = code;
       await user.save();
+      console.log(req.cookies);
       res.status(201).json({
         success: true,
       });
@@ -230,6 +231,7 @@ interface ILoginRequest {
 export const loginUser = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log(req.cookies);
       const { email, password } = req.body as ILoginRequest;
 
       if (!email || !password) {
@@ -244,13 +246,12 @@ export const loginUser = CatchAsyncError(
       const isPasswordMatch = await user.comparePassword(password);
       if (!isPasswordMatch) {
         return next(new ErrorHandler("Invalid email or password", 400));
-      }
+      } 
       if( user.deviceId != req.session.deviceId && user.role == "user" ){
         return next( new ErrorHandler("you are not have permession to access route",400) );
       };
       sendToken(user, 200, res);
     } catch (error: any) {
-
       return next(new ErrorHandler(error.message, 400));
     }
   }
@@ -303,12 +304,12 @@ export const updateAccessToken = CatchAsyncError(
       //     new ErrorHandler("Please login for access this resources!", 400)
       //   );
       // }
-      
+
       // const user = JSON.parse(session);
 
       const accessToken = jwt.sign(
         // { id: user._id },
-        { id: decoded.id , deviceId:user.deviceId }, // new 
+        { id: decoded.id, deviceId: user.deviceId }, // new
         process.env.ACCESS_TOKEN as string,
         {
           expiresIn: "5m",
@@ -317,7 +318,7 @@ export const updateAccessToken = CatchAsyncError(
 
       const refreshToken = jwt.sign(
         // { id: user._id },
-        { id: decoded.id , deviceId:user.deviceId }, // new
+        { id: decoded.id, deviceId: user.deviceId }, // new
         process.env.REFRESH_TOKEN as string,
         {
           expiresIn: "3d",
@@ -364,9 +365,9 @@ export const socialAuth = CatchAsyncError(
       const user = await userModel.findOne({ email });
       if (!user) {
         const newUser = await userModel.create({ email, name, avatar });
-        const code=crypto.randomBytes(4).toString("hex");
-        req.session.deviceId=code;
-        newUser.deviceId=code;
+        const code = crypto.randomBytes(4).toString("hex");
+        req.session.deviceId = code;
+        newUser.deviceId = code;
         await newUser.save();
         sendToken(newUser, 200, res);
       } else {
@@ -529,7 +530,7 @@ export const updateUserRole = CatchAsyncError(
       const isUserExist = await userModel.findOne({ email });
       if (isUserExist) {
         const id = isUserExist._id;
-        updateUserRoleService(res,id, role);
+        updateUserRoleService(res, id, role);
       } else {
         res.status(400).json({
           success: false,
@@ -556,7 +557,7 @@ export const deleteUser = CatchAsyncError(
 
       await user.deleteOne({ id });
 
-// /      await redis.del(id);
+      // /      await redis.del(id);
 
       res.status(200).json({
         success: true,

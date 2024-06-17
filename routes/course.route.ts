@@ -14,8 +14,10 @@ import {
   uploadCourse,
 } from "../controllers/course.controller";
 import { authorizeRoles, isAutheticated } from "../middleware/auth";
+import quizRouter from "./quiz.route";
 const courseRouter = express.Router();
 
+courseRouter.use("/course/:id/", quizRouter);
 courseRouter.post(
   "/create-course",
   isAutheticated,

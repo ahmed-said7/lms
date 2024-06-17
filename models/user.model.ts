@@ -13,10 +13,14 @@ export interface IUser extends Document {
     public_id: string;
     url: string;
   };
+  quizes: {
+    quiz: Schema.Types.ObjectId;
+    ref: "Result";
+  };
   deviceId?: string;
   role: string;
   isVerified: boolean;
-  resetDeviceCode?:string;
+  resetDeviceCode?: string;
   courses: Array<{ courseId: string }>;
   comparePassword: (password: string) => Promise<boolean>;
   SignAccessToken: () => string;
@@ -57,17 +61,44 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    resetDeviceCode:String,
+    resetDeviceCode: String,
     deviceId: String,
     courses: [
       {
         courseId: String,
       },
     ],
+    quizes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Result",
+      },
+    ],
   },
   { timestamps: true }
 );
+// quizModel.find({courseId:{$in:req.user.courses}}) return all courses quizes
 
+/*
+{
+  quiz:Schema.Types.ObjectId,
+  ref:"Quiz",
+  takenAt:Date.now();
+  degree:string,
+  totalDegree:String
+}
+*/
+/*
+[{ questionId: string, answar: string }];
+ */
+
+//populating quizes
+/*
+userSchema.pre<IUser>(/^find/, function (next) {
+  this.populate({ path: "quizes" });
+  next();
+});
+*/
 // Hash Password before saving
 userSchema.pre<IUser>("save", async function (next) {
   if (!this.isModified("password")) {
@@ -79,16 +110,24 @@ userSchema.pre<IUser>("save", async function (next) {
 
 // sign access token
 userSchema.methods.SignAccessToken = function () {
-  return jwt.sign({ id: this._id , deviceId : this.deviceId }, process.env.ACCESS_TOKEN || "", {
-    expiresIn: "5m",
-  });
+  return jwt.sign(
+    { id: this._id, deviceId: this.deviceId },
+    process.env.ACCESS_TOKEN || "",
+    {
+      expiresIn: "5m",
+    }
+  );
 };
 
 // sign refresh token
 userSchema.methods.SignRefreshToken = function () {
-  return jwt.sign({ id: this._id, deviceId : this.deviceId }, process.env.REFRESH_TOKEN || "", {
-    expiresIn: "300d",
-  });
+  return jwt.sign(
+    { id: this._id, deviceId: this.deviceId },
+    process.env.REFRESH_TOKEN || "",
+    {
+      expiresIn: "300d",
+    }
+  );
 };
 
 // compare password
