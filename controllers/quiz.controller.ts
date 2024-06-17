@@ -164,13 +164,12 @@ export const submitQuiz = CatchAsyncError(
       };
       
       let deg = 0;
-      userAnswers.forEach( async ({ question:id , ans }) => {
+      for( const { question:id , ans } of userAnswers ){
         const question=await questionModel.findById(id);
         if( question?.correctAnswer == ans  ){
           deg += question.degree;
         };
-      });
-      //console.log(data.answars[0].question);
+      };
       const result = await resultModel.create({
         quiz: quiz?._id,
         degree: deg,
