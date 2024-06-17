@@ -75,7 +75,6 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
   { timestamps: true }
 );
 // quizModel.find({courseId:{$in:req.user.courses}}) return all courses quizes
-
 /*
 {
   quiz:Schema.Types.ObjectId,
