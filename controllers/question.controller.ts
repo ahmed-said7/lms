@@ -18,7 +18,7 @@ export const createQuestion = CatchAsyncError(
       await quiz.save();
       res.status(201).json({
         success: true,
-        question,
+        question
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
@@ -92,10 +92,13 @@ export const getAllQuestions = CatchAsyncError(
     try {
       let fliter = {};
       if (req.params.quizId) fliter = { quiz: req.params.quizId };
-      const quesions = await questionModel.find(fliter);
+      const questions = await questionModel.find(fliter);
+      if( questions.length == 0){
+        return next( new ErrorHandler("questions not found",400) )
+      };
       res.status(200).json({
         success: true,
-        quesions,
+        questions,
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));

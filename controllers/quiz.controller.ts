@@ -208,14 +208,12 @@ export const getMyResults = CatchAsyncError(
       if (req.user?.quizes.length === 0) {
         return next(new ErrorHandler("there is no results to display", 404));
       }
-
       const user = await req.user?.populate
         ({ 
           path: "quizes", 
           select: "-user",
           populate : [ { path : "quiz" } , {path:"course"} ]
         });
-
       res.status(201).json({
         success: true,
         result: user?.quizes,
