@@ -92,15 +92,15 @@ export const getAllQuizes = CatchAsyncError(
             )
           );
         }
-        if (filter != {}) {
+        if (!filter) {
           if (allowUserToQuiz(req.user?.courses, req.params.id)) {
-            console.log("hello from here 2");
+            //console.log("hello from here 2");
             quiz = await quizModel.find({ courseId: req.params.id });
           }
         } else {
           console.log(req.user?.courses);
           quiz = await quizModel.find({
-            courseId: { $in: req.user?.courses },
+            courseId: { $in: req.user?.courses.courseId },
           });
           //console.log("hello from here 3");
         }
