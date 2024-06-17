@@ -6,7 +6,6 @@ import {
   createQuiz,
   deleteQuiz,
   getAllQuizes,
-  getQuiz,
   submitQuiz,
   takeQuiz,
   updateQuiz,
