@@ -3,14 +3,7 @@ import { CatchAsyncError } from "./catchAsyncErrors";
 import ErrorHandler from "../utils/ErrorHandler";
 import jwt, { JwtPayload } from "jsonwebtoken";
 // import { redis } from "../utils/redis";
-<<<<<<< HEAD
 import {  updateAccessToken } from "../controllers/user.controller";
-=======
-import {
-  getMacAddress,
-  updateAccessToken,
-} from "../controllers/user.controller";
->>>>>>> eslam
 import userModel from "../models/user.model";
 
 // authenticated user
@@ -45,23 +38,9 @@ export const isAutheticated = CatchAsyncError(
           new ErrorHandler("Please login to access this resource", 400)
         );
       }
-<<<<<<< HEAD
       if( user.deviceId != req.session.deviceId && user.role == "user" ){
         return next( new ErrorHandler("you are not have permession to access route",400) );
       };
-=======
-      const { macAddress, stderr } = await getMacAddress();
-      if (stderr) {
-        return next(new ErrorHandler("error on retrieving mac", 400));
-      }
-      /*
-      if (user.deviceId != macAddress || user.deviceId != decoded.deviceId) {
-        return next(
-          new ErrorHandler("you are not have permession to access route", 400)
-        );
-      }
-        */
->>>>>>> eslam
       // req.user = JSON.parse(user);
       req.user = user;
 
