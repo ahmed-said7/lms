@@ -24,12 +24,7 @@ app.use(cookieParser());
 // cookie parser
 
 // cors => cross origin resource sharing
-app.use(
-  cors({
-    origin: ["https://client-lms-wvtg.onrender.com"],
-    credentials: true,
-  })
-);
+app.use(cors({}));
 
 app.use(session({
   name:"Session_Id",
