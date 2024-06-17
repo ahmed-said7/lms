@@ -108,10 +108,14 @@ export const takeQuiz = CatchAsyncError(
       if (!allowUserToQuiz( req.user?.courses!, quiz.courseId.toString() )) {
         return next(new ErrorHandler("you must enroll course first", 403));
       }
-
+      
       if (quiz?.endDate.getTime() <= Date.now()) {
         return next(new ErrorHandler("sorry quiz time out", 400));
       }
+      const result=await resultModel.findOne({ user: req.user?._id , quiz:quiz._id });
+      if( result ){
+        return next( new ErrorHandler("you have already take quiz",400) )
+      };
       //checkQuizVaildation(quiz, req, next);
       const questions = await questionModel.find({ quiz: quiz._id });
       res.status(201).json({
@@ -163,6 +167,11 @@ export const submitQuiz = CatchAsyncError(
         return next(new ErrorHandler("questions not found",400));
       };
       
+      let result=await resultModel.findOne({ user: req.user?._id , quiz:quiz._id });
+      if( result ){
+        return next( new ErrorHandler("you have already take quiz",400) )
+      };
+
       let deg = 0;
       for( const { question:id , ans } of userAnswers ){
         const question=await questionModel.findById(id);
@@ -170,7 +179,7 @@ export const submitQuiz = CatchAsyncError(
           deg += question.degree;
         };
       };
-      const result = await resultModel.create({
+      result = await resultModel.create({
         quiz: quiz?._id,
         degree: deg,
         totalDegree: quiz?.totalDegree,
