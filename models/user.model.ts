@@ -16,7 +16,7 @@ export interface IUser extends Document {
   quizes: {
     quiz: Schema.Types.ObjectId;
     ref: "Result";
-  };
+  }[];
   deviceId?: string;
   role: string;
   isVerified: boolean;

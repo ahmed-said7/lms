@@ -37,8 +37,9 @@ const quizSchema = new Schema<IQuiz>(
       type: Date,
       required: [true, "a quiz must have end Date"],
       validate: {
-        validator: function (date: Date) {
-          return date > this.startDate;
+        validator: function (date: Date):boolean {
+          // @ts-ignore
+          return date.getTime() > this.startDate;
         },
         message: `endDate must greater than start Date`,
       },

@@ -1,10 +1,10 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 interface IQuestion extends Document {
-  question: String;
-  answers: [String];
-  correctAnswer: String;
+  question: string;
+  answers: [string];
+  correctAnswer: string;
   quiz: Schema.Types.ObjectId;
-  degree: Number;
+  degree: number;
 }
 
 const questionSchema = new Schema<IQuestion>({
