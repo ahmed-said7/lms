@@ -56,6 +56,7 @@ export const updateQuestion = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const data = req.body;
+      delete data.quiz;
       const question = await questionModel.findById(
         req.params.questionId 
       );
