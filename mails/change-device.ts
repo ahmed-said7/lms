@@ -79,7 +79,10 @@ export const resetDeviceHTML = (user:string, resetLink:string) => {
                 <p style="color: #091e2b;">Dear ${user},</p>
                 <p style="color: #091e2b;">You have requested to change device. Please click the button below from the new device</p>
                 <div style="text-align: center;">
-                    <a href="${resetLink}" class="button" style="color: #fafafa;">Reset Password</a>
+                    <a href="${resetLink}" class="button" style="color: #fafafa;">Reset Device</a>
+                </div>
+                <div style="text-align: center;">
+                    your link is : ${resetLink}
                 </div>
                 <br>
                 <p style="color: #091e2b;">If you did not request to change device, please ignore this email.</p>
