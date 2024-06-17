@@ -1,10 +1,10 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 interface IQuiz extends Document {
-  name: String;
+  name: string;
   courseId: Schema.Types.ObjectId;
-  totalDegree: Number;
+  totalDegree: number;
   isOpened: boolean;
-  quizType: String;
+  quizType: string;
   startDate: Date;
   endDate: Date;
 }

@@ -13,10 +13,7 @@ export interface IUser extends Document {
     public_id: string;
     url: string;
   };
-  quizes: {
-    quiz: Schema.Types.ObjectId;
-    ref: "Result";
-  }[];
+  quizes: Schema.Types.ObjectId[];
   deviceId?: string;
   role: string;
   isVerified: boolean;

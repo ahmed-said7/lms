@@ -101,7 +101,7 @@ export const takeQuiz = CatchAsyncError(
       if (!quiz) {
         return next(new ErrorHandler("there is no quiz with this id", 404));
       }
-      if (quiz?.startDate.getTime() > Date.now()) {
+      if (quiz?.startDate.getTime() >= Date.now()) {
         return next(new ErrorHandler("quiz is not started yet", 400));
       }
 
@@ -109,7 +109,7 @@ export const takeQuiz = CatchAsyncError(
         return next(new ErrorHandler("you must enroll course first", 403));
       }
 
-      if (quiz?.endDate.getTime() < Date.now()) {
+      if (quiz?.endDate.getTime() <= Date.now()) {
         return next(new ErrorHandler("sorry quiz time out", 400));
       }
       //checkQuizVaildation(quiz, req, next);
@@ -134,7 +134,7 @@ export const submitQuiz = CatchAsyncError(
       if (!quiz) {
         return next(new ErrorHandler("there is no quiz with this id", 404));
       }
-      if ( quiz?.startDate.getTime() > Date.now() ) {
+      if ( quiz?.startDate.getTime() >= Date.now() ) {
         return next(new ErrorHandler("quiz is not started yet", 400));
       }
 
@@ -142,7 +142,7 @@ export const submitQuiz = CatchAsyncError(
         return next(new ErrorHandler("you must enroll course first", 403));
       }
 
-      if (quiz?.endDate.getTime() < Date.now()) {
+      if (quiz?.endDate.getTime() <= Date.now()) {
         return next(
           new ErrorHandler(
             "sorry quiz time out and your answers are not sent",
@@ -151,20 +151,20 @@ export const submitQuiz = CatchAsyncError(
         );
       }
       //req.body contains question Id and aswar
-      const userAnswars = req.body.answars as { question:string; ans:string }[];
+      const userAnswers = req.body.answers as { question:string; ans:string }[];
       // console.log(userAnswars);
       const user = req.user;
       const courseId = quiz?.courseId;
       const quesions = await questionModel
         .find
-        ({ courseId, _id : { $in : userAnswars.map( ({question}) => question ) } });
+        ({ courseId, _id : { $in : userAnswers.map( ({question}) => question ) } });
       // console.log(quesions);
-      if( quesions.length != userAnswars.length ){
+      if( quesions.length != userAnswers.length ){
         return next(new ErrorHandler("questions not found",400));
       };
       
       let deg = 0;
-      userAnswars.forEach( async ({ question:id , ans }) => {
+      userAnswers.forEach( async ({ question:id , ans }) => {
         const question=await questionModel.findById(id);
         if( question?.correctAnswer == ans  ){
           deg += question.degree;
@@ -209,7 +209,13 @@ export const getMyResults = CatchAsyncError(
         return next(new ErrorHandler("there is no results to display", 404));
       }
 
-      const user = await req.user?.populate({ path: "quizes", select: "-user" });
+      const user = await req.user?.populate
+        ({ 
+          path: "quizes", 
+          select: "-user",
+          populate : [ { path : "quiz" } , {path:"course"} ]
+        });
+
       res.status(201).json({
         success: true,
         result: user?.quizes,
@@ -218,4 +224,5 @@ export const getMyResults = CatchAsyncError(
       return next(new ErrorHandler(error.message, 500));
     }
   }
+
 );

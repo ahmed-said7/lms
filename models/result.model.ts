@@ -1,11 +1,15 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 interface IResult extends Document {
   quiz: Schema.Types.ObjectId;
-  degree: Number;
-  totalDegree: Number;
+  degree: number;
+  totalDegree: number;
   course: Schema.Types.ObjectId;
   user: Schema.Types.ObjectId;
 }
+// mongoose types
+// ts types
+// Date
+// 
 
 const resultSchema = new Schema<IResult>(
   {
