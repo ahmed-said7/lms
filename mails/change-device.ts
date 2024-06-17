@@ -4,7 +4,7 @@ export const resetDeviceHTML = (user:string, resetLink:string) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Password Reset</title>
+        <title>Device Reset</title>
         
         <style>
         body, html {
@@ -71,9 +71,9 @@ export const resetDeviceHTML = (user:string, resetLink:string) => {
         <div class="container">
             <div class="header">
                 <div class="logo" style="text-align: center; font-size: 24px; font-weight: bold; color: #c49615; margin-bottom: 10px;">
-                    <span>Umrah Plus</span>
+                    <span>learning</span>
                 </div>
-                <h2 style="color: #c49615;">Password Reset</h2>
+                <h2 style="color: #c49615;">Device Reset</h2>
             </div>
             <div class="content">
                 <p style="color: #091e2b;">Dear ${user},</p>
