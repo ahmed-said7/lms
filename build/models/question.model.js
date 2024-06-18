@@ -29,6 +29,10 @@ const questionSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "a question must have statament"],
     },
+    image: {
+        public_id: String,
+        url: String,
+    },
     quiz: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "Quiz",

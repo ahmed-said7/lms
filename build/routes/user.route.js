@@ -10,7 +10,7 @@ const userRouter = express_1.default.Router();
 userRouter.post("/registration", user_controller_1.registrationUser);
 userRouter.post("/activate-user", user_controller_1.activateUser);
 userRouter.post("/login", user_controller_1.loginUser);
-userRouter.post("/request-change-device", auth_1.isAutheticated, user_controller_1.requestToLoginFromAnotherDevice);
+userRouter.post("/request-change-device", auth_1.isAutheticated, (0, auth_1.authorizeRoles)("admin"), user_controller_1.requestToLoginFromAnotherDevice);
 userRouter.post("/change-device", user_controller_1.changeDevice);
 userRouter.get("/logout", auth_1.isAutheticated, user_controller_1.logoutUser);
 userRouter.get("/me", auth_1.isAutheticated, user_controller_1.getUserInfo);

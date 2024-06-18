@@ -24,7 +24,10 @@ app.use(cookieParser());
 // cookie parser
 
 // cors => cross origin resource sharing
-app.use(cors({}));
+app.use(cors({
+  origin:["http://localhost:3000"],
+  credentials:true
+}));
 
 app.use(session({
   name:"Session_Id",
