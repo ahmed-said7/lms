@@ -230,5 +230,4 @@ export const getMyResults = CatchAsyncError(
       return next(new ErrorHandler(error.message, 500));
     }
   }
-
 );

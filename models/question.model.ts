@@ -5,12 +5,20 @@ interface IQuestion extends Document {
   correctAnswer: string;
   quiz: Schema.Types.ObjectId;
   degree: number;
+  image: {
+    public_id: string;
+    url: string;
+  };
 }
 
 const questionSchema = new Schema<IQuestion>({
   question: {
     type: String,
     required: [true, "a question must have statament"],
+  },
+  image: {
+    public_id: String,
+    url: String,
   },
   quiz: {
     type: Schema.Types.ObjectId,

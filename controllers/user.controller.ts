@@ -99,6 +99,7 @@ export const createActivationToken = (user: any): IActivationToken => {
   return { token, activationCode };
 };
 
+
 export const requestToLoginFromAnotherDevice = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
